@@ -198,6 +198,7 @@ class NR7101:
             ("wifi_easy_mesh", "wifi_mesh"),
             ("one_connect", "one_connect"),
             ("status", "device"),
+            ("cellwan_sms", "sms"),
         ]
 
         while retries > 0:
@@ -243,6 +244,7 @@ class NR7101:
         """Probe which endpoints are available on this router for debugging."""
         endpoints_to_probe = [
             "cellwan_status",
+            "cellwan_sms",
             "Traffic_Status",
             "cardpage_status",
             "lan",
