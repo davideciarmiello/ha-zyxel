@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 nr7101_logger = logging.getLogger("nr7101.nr7101")
 nr7101_logger.setLevel(logging.WARNING)
 
-from nr7101 import nr7101
+from .nr7101 import nr7101
 
 PLATFORMS = ["sensor", "button"]
 
