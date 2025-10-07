@@ -25,6 +25,7 @@ class NR7101:
         self.params = params
         self.rsa_key = None
         self.encryption_required = False
+        self.last_status_data = None
         password_b64 = base64.b64encode(password.encode("utf-8")).decode("utf-8")
 
         # NR7101 is using by default self-signed certificates, so ignore the warnings
@@ -185,7 +186,8 @@ class NR7101:
             ret = {}
             if obj and "ipIface" in obj and "ipIfaceSt" in obj:
                 for iface, iface_st in zip(obj["ipIface"], obj["ipIfaceSt"]):
-                    ret[iface["X_ZYXEL_IfName"]] = iface_st
+                    if "X_ZYXEL_IfName" in iface and iface["X_ZYXEL_IfName"]:
+                        ret[iface["X_ZYXEL_IfName"]] = iface_st
             return ret
 
         # Define endpoint priorities based on router type
