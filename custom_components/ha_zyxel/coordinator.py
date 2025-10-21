@@ -30,20 +30,7 @@ class ZyxelDataUpdateCoordinator(DataUpdateCoordinator):
         self.config = (entry.data or {}).copy()
         self._device_info = None  # sarà creato solo la prima volta        
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL))
-
-
-    async def init_router(self):
-        host = self.config[CONF_HOST]
-        username = self.config[CONF_USERNAME]
-        password = self.config[CONF_PASSWORD]
-        try:
-            self.router = await self.hass.async_add_executor_job(
-                NR7101, host, username, password
-            )
-        except Exception as ex:
-            _LOGGER.error("Could not connect to Zyxel router: %s", ex)
-            raise ConfigEntryNotReady from ex
-
+        self.router = NR7101(self.config[CONF_HOST], self.config[CONF_USERNAME], self.config[CONF_PASSWORD])
     
     @property
     def device_available(self):
@@ -79,38 +66,40 @@ class ZyxelDataUpdateCoordinator(DataUpdateCoordinator):
         return value
 
     async def _async_update_data(self):
-        if not self.router:
-            await self.init_router()
         router = self.router
         hass = self.hass
+        
+        if router.sessionkey is None:
+            try:
+                await router.login()
+            except Exception as ex:
+                _LOGGER.error("Could not connect to Zyxel router: %s" % ex)
+                raise ConfigEntryNotReady from ex
 
         """Fetch data from the router."""
         try:
             async with async_timeout.timeout(15):
-                def get_all_data():
-                    data = router.get_status()
+                data = await router.get_status()
 
-                    if not data:
-                        raise UpdateFailed("No data received from router")
-                    router.last_status_data = data
+                if not data:
+                    raise UpdateFailed("No data received from router")
+                router.last_status_data = data
 
-                    # Get device info if not already in data
-                    if "device" not in data or not data["device"]:
-                        device_info = router.get_json_object("status")
-                        if device_info:
-                            data["device"] = device_info
-                        else:
-                            raise UpdateFailed("No device data received from router")
-                    
-                    #for get device as first
-                    new_data = { "device": data["device"] }
-                    new_data.update(data)
+                # Get device info if not already in data
+                if "device" not in data or not data["device"]:
+                    device_info = await router.get_json_object("status")
+                    if device_info:
+                        data["device"] = device_info
+                    else:
+                        raise UpdateFailed("No device data received from router")
+                
+                #for get device as first
+                new_data = { "device": data["device"] }
+                new_data.update(data)
 
-                    flat_data = _flatten_dict(new_data)
+                flat_data = _flatten_dict(new_data)
 
-                    return flat_data
-
-                return await hass.async_add_executor_job(get_all_data)
+                return flat_data
         except asyncio.TimeoutError:
             router._session_valid = False
             raise UpdateFailed("Router data fetch timed out")

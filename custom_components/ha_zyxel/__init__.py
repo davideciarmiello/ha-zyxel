@@ -10,8 +10,8 @@ from .const import *
 _LOGGER = logging.getLogger(__name__)
 
 # Block excessive nr7101 debug logging
-nr7101_logger = logging.getLogger("nr7101.nr7101")
-nr7101_logger.setLevel(logging.WARNING)
+#nr7101_logger = logging.getLogger("nr7101.nr7101")
+#nr7101_logger.setLevel(logging.WARNING)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -38,7 +38,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         entry.runtime_data = None
-
+    
+    await coordinator.router.close()
     return unload_ok
 
 
