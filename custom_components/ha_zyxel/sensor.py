@@ -83,7 +83,7 @@ class ZyxelSensorEntity(ZyxelBaseEntity, SensorEntity):
             return None
 
 class LastRestartSensor(RestoreEntity, ZyxelBaseEntity, SensorEntity):
-    """Sensore che mostra la data/ora dell'ultimo riavvio."""
+    """Sensor that shows the date/time of the last reboot."""
 
     def __init__(self, coordinator):        
         super().__init__(coordinator, "device.DeviceInfo.UpTime", None)
@@ -97,14 +97,14 @@ class LastRestartSensor(RestoreEntity, ZyxelBaseEntity, SensorEntity):
 
 
     async def async_added_to_hass(self):
-        """Chiamato quando viene aggiunto a Home Assistant."""
+        """Called when added to Home Assistant."""
         await super().async_added_to_hass()
         if (last_state := await self.async_get_last_state()) is not None:
-            # Recupera stato (data)
+            # Get status (date)
             if last_state.state and last_state.state != "unknown":
                 try:
                     self._last_restart = datetime.fromisoformat(last_state.state)                    
-                    # Recupera attributi
+                    # Get attributes
                     attrs = last_state.attributes
                     self._last_uptime = int(float(attrs["uptime"]))
                 except ValueError:
@@ -124,7 +124,7 @@ class LastRestartSensor(RestoreEntity, ZyxelBaseEntity, SensorEntity):
             
     @property
     def extra_state_attributes(self):
-        """Aggiunge attributi extra al bottone."""
+        """Add extra attributes"""
         return { "uptime": self._last_uptime }
 
 def _is_value_scalar(value: Any) -> bool:
